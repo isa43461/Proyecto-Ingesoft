@@ -14,9 +14,9 @@ from werkzeug.utils import secure_filename
 from pymongo import MongoClient
 from mongoFunctions import *
 
-UPLOAD_FOLDER = "/home/ubuntu/ingesoft/static/leerCodigosQR/"
-UPLOAD_FOLDER2 = "/home/ubuntu/ingesoft/static/archivosRUT/"
-UPLOAD_FOLDER3 = "/home/ubuntu/ingesoft/static/excel/"
+UPLOAD_FOLDER = "/home/ubuntu/software/ingesoft/static/leerCodigosQR/"
+UPLOAD_FOLDER2 = "/home/ubuntu/software/ingesoft/static/archivosRUT/"
+UPLOAD_FOLDER3 = "/home/ubuntu/software/ingesoft/static/excel/"
 #@login_required
 app = Flask(__name__, template_folder="templates")
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -476,7 +476,7 @@ def modInfoSalud(Id):
 
 @app.route('/img/<img_id>')
 def serve_img(img_id):
-	return redirect(url_for('/home/ubuntu/ingesoft/codigosQR/', download=img_id), code=301)
+	return redirect(url_for('/home/ubuntu/software/ingesoft/codigosQR/', download=img_id), code=301)
 
 @app.route('/genCodigoQR/<Id>')
 def genCodigoQR(Id):
@@ -498,7 +498,7 @@ def genCodigoQR(Id):
 	qr.add_data(info)
 	qr.make(fit=True)
 	imagen = qr.make_image()
-	dir_path = "/home/ubuntu/ingesoft/static/codigosQR/" + str(Id) + ".png"
+	dir_path = "/home/ubuntu/software/ingesoft/static/codigosQR/" + str(Id) + ".png"
 	imagen.save(dir_path, 'PNG')
 	return render_template('/codigoQR.html', data = data)
 
@@ -597,7 +597,7 @@ def seleccionarFiltroSalud(nit):
 @app.route('/leerCodigoQR/<nit>', methods=['POST'])
 def leerCodigo(nit):
 	#dir_path = sys.path[0]
-	dir_path = "/home/ubuntu/ingesoft"
+	dir_path = "/home/ubuntu/software/ingesoft"
 	if request.method == 'POST':
 		temperatura = float(request.form.get("inputTemp"))
 		tapabocas = request.form.get("inputMuni")

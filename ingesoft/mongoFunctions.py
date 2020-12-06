@@ -463,8 +463,8 @@ def createExcel(jso):
 			"Ingreso",
 			"Nombres",
 			"Apellidos"]]
-	filename = 'archivo.xlsx'
-	writer = ExcelWriter(os.path.join('/home/ubuntu/ingesoft/static/excel/', filename))
+	filename = '/archivo.xlsx'
+	writer = ExcelWriter(filename)
 	df.to_excel(writer, 'Hoja de datos', index=False)
 	writer.save()
 	return
@@ -480,8 +480,8 @@ def createExcelSalud(jso):
 			"Resultado",
 			"Fecha del exámen",
 			"Días de cuarentena"]]
-	filename = 'archivo.xlsx'
-	writer = ExcelWriter(os.path.join('/home/ubuntu/ingesoft/static/excel/', filename))
+	filename = '/archivo.xlsx'
+	writer = ExcelWriter(filename)
 	df.to_excel(writer, 'Hoja de datos', index=False)
 	writer.save()
 	return
@@ -533,7 +533,7 @@ def createPDF(col):
 		#pdf.cell(-90)
 		acum += 10
 		pdf.set_xy(0, acum)
-	pdf.output('/home/ubuntu/ingesoft/static/pdf/archivo.pdf', 'F')
+	pdf.output('/archivo.pdf', 'F')
 	return	
 		
 def createPDFSalud(col):
