@@ -1,4 +1,3 @@
-#import zbar
 import time
 import datetime
 import qrcode
@@ -7,8 +6,6 @@ import base64
 import sys
 import pandas as pd
 from pandas import ExcelWriter
-#from win32com import client
-#import win32api
 import numpy as np
 import cv2
 from PIL import Image
@@ -17,9 +14,9 @@ from werkzeug.utils import secure_filename
 from pymongo import MongoClient
 from mongoFunctions import *
 
-UPLOAD_FOLDER = "C:/Users/Victor Toro/Desktop/ingesoft/static/leerCodigosQR/"
-UPLOAD_FOLDER2 = "C:/Users/Victor Toro/Desktop/ingesoft/static/archivosRUT/"
-UPLOAD_FOLDER3 = "C:/Users/Victor Toro/Desktop/ingesoft/static/excel/"
+UPLOAD_FOLDER = "/home/ubuntu/ingesoft/static/leerCodigosQR/"
+UPLOAD_FOLDER2 = "/home/ubuntu/ingesoft/static/archivosRUT/"
+UPLOAD_FOLDER3 = "/home/ubuntu/ingesoft/static/excel/"
 #@login_required
 app = Flask(__name__, template_folder="templates")
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -269,9 +266,9 @@ def regDatosCiudadano():
 	genero = request.form.get("tipoGen")
 	correo = request.form.get("inputemail")
 	fecha = request.form.get("birthday")
-	departamento = "Valle del Cauca"#departamento = request.form.get("inputDepart")
-	municipio = "Cali"#municipio = request.form.get("inputMuni")
-	barrio = "Siloe"#barrio = request.form.get("inputState")
+	departamento = request.form.get("inputDepart")
+	municipio = request.form.get("inputMuni")
+	barrio = request.form.get("inputState")
 	direccion = request.form.get("inputAddress")
 	usuario = request.form.get("inputUsr")
 	contra = request.form.get("inputPassword")
@@ -287,9 +284,9 @@ def regDatosEstablecimiento():
 	categoria = request.form.get("tipo")
 	contacto = request.form.get("inputNumDoc")
 	correo = request.form.get("inputemail")
-	departamento = "Valle del Cauca"#departamento = request.form.get("inputDepart")
-	municipio = "Cali"#municipio = request.form.get("inputMuni")
-	barrio = "Siloe"#barrio = request.form.get("inputState")
+	departamento = request.form.get("inputDepart")
+	municipio = request.form.get("inputMuni")
+	barrio = request.form.get("inputState")
 	direccion = request.form.get("inputAddress")
 	usuario = request.form.get("inputUsr")
 	contra = request.form.get("inputPassword")
@@ -312,9 +309,9 @@ def regDatosSalud():
 	categoria = request.form.get("tipo")
 	contacto = request.form.get("inputNumDoc")
 	correo = request.form.get("inputemail")
-	departamento = "Valle del Cauca"#departamento = request.form.get("inputDepart")
-	municipio = "Cali"#municipio = request.form.get("inputMuni")
-	barrio = "Siloe"#barrio = request.form.get("inputState")
+	departamento = request.form.get("inputDepart")
+	municipio = request.form.get("inputMuni")
+	barrio = request.form.get("inputState")
 	direccion = request.form.get("inputAddress")
 	usuario = request.form.get("inputUsr")
 	contra = request.form.get("inputPassword")
@@ -352,7 +349,9 @@ def ingresar():
 			usr = orderCiudadano(usr)
 			data = jsonToList(usr)
 		else:
-			return 'No mi rey, no estas registrado'
+			flash("No estás registrado o tus datos no coinciden")
+			redir = "iniciarS.html"
+			return render_template(redir)
 
 	elif select == 'Establecimiento':
 		est = Establecimiento.find_one({"Usuario":usuario, "Contraseña":contra})
@@ -362,7 +361,10 @@ def ingresar():
 			data = jsonToList(est)
 			##Categoria
 		else:
-			return 'No mi rey, no estas registrado'
+			flash("No estás registrado o tus datos no coinciden")
+			redir = "iniciarS.html"
+			return render_template(redir)
+
 	
 	elif select == 'Entidad de salud':
 		select = 'Salud'
@@ -373,7 +375,9 @@ def ingresar():
 			data = jsonToList(sal)
 			##Categori
 		else:
-			return 'No mi rey, no estas registrado'
+			flash("No estás registrado o tus datos no coinciden")
+			redir = "iniciarS.html"
+			return render_template(redir)
 
 	elif select == 'Administrador':
 		adm = Admin.find_one({"Usuario":usuario, "Contraseña":contra})
@@ -382,7 +386,10 @@ def ingresar():
 			adm = orderAdmin(adm)
 			data = jsonToList(adm)
 		else:
-			return 'No mi rey, no estas registrado'
+			flash("No estás registrado o tus datos no coinciden")
+			redir = "iniciarS.html"
+			return render_template(redir)
+
 
 	return render_template(redir, data = data)
 
@@ -469,7 +476,7 @@ def modInfoSalud(Id):
 
 @app.route('/img/<img_id>')
 def serve_img(img_id):
-	return redirect(url_for('C:/Users/Victor Toro/Desktop/ingesoft/codigosQR/', download=img_id), code=301)
+	return redirect(url_for('/home/ubuntu/ingesoft/codigosQR/', download=img_id), code=301)
 
 @app.route('/genCodigoQR/<Id>')
 def genCodigoQR(Id):
@@ -491,7 +498,7 @@ def genCodigoQR(Id):
 	qr.add_data(info)
 	qr.make(fit=True)
 	imagen = qr.make_image()
-	dir_path = "C:/Users/Victor Toro/Desktop/ingesoft/static/codigosQR/" + str(Id) + ".png"
+	dir_path = "/home/ubuntu/ingesoft/static/codigosQR/" + str(Id) + ".png"
 	imagen.save(dir_path, 'PNG')
 	return render_template('/codigoQR.html', data = data)
 
@@ -590,7 +597,7 @@ def seleccionarFiltroSalud(nit):
 @app.route('/leerCodigoQR/<nit>', methods=['POST'])
 def leerCodigo(nit):
 	#dir_path = sys.path[0]
-	dir_path = "C:/Users/Victor Toro/Desktop/ingesoft"
+	dir_path = "/home/ubuntu/ingesoft"
 	if request.method == 'POST':
 		temperatura = float(request.form.get("inputTemp"))
 		tapabocas = request.form.get("inputMuni")
@@ -645,8 +652,8 @@ def filtroVisitasCiudadano(Id):
 			fil = jsonExcel(ans)
 			if descarga == 'Excel':
 				createExcel(fil)
-			#elif descarga == 'PDF':
-			#	createPDF()
+			elif descarga == 'PDF':
+				createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
 	redir = '/reportesCiudadanoID/' + Id
@@ -663,8 +670,8 @@ def filtroVisFechaCiudadano(Id):
 			fil = jsonExcel(ans)
 			if descarga == 'Excel':
 				createExcel(fil)
-			#elif descarga == 'PDF':
-			#	createPDF()
+			elif descarga == 'PDF':
+				createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
 	redir = '/reportesCiudadanoID/' + Id
@@ -683,13 +690,14 @@ def filtroVisFechaHoraCiudadano(Id):
 			fil = jsonExcel(ans)
 			if descarga == 'Excel':
 				createExcel(fil)
-			#elif descarga == 'PDF':
-			#	createPDF()
+			elif descarga == 'PDF':
+				createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
 	redir = '/reportesCiudadanoID/' + Id
 	return redirect(redir)
 
+"""
 @app.route('/filtroExamenesCiudadano/<Id>', methods=['POST'])
 def filtroExamenesCiudadano(Id):
 	if request.method == 'POST':
@@ -705,6 +713,7 @@ def filtroExamenesCiudadano(Id):
 			flash("*No se encontraron coincidencias con el filtro")
 	redir = '/reportesCiudadanoID/' + Id
 	return redirect(redir)
+"""
 
 @app.route('/filtroVisitasEstablecimiento/<nit>', methods=['POST'])
 def filtroVisitasEstablecimiento(nit):
@@ -715,8 +724,8 @@ def filtroVisitasEstablecimiento(nit):
 			fil = jsonExcel(ans)
 			if descarga == 'Excel':
 				createExcel(fil)
-			#elif descarga == 'PDF':
-			#	createPDF()
+			elif descarga == 'PDF':
+				createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
 	redir = '/reportesEstablecimientoNIT/' + nit
@@ -733,8 +742,8 @@ def filtroFechaEstablecimiento(nit):
 			fil = jsonExcel(ans)
 			if descarga == 'Excel':
 				createExcel(fil)
-			#elif descarga == 'PDF':
-			#	createPDF()
+			elif descarga == 'PDF':
+				createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
 	redir = '/reportesEstablecimientoNIT/' + nit
@@ -753,8 +762,8 @@ def filtroFechaHoraEstablecimiento(nit):
 			fil = jsonExcel(ans)
 			if descarga == 'Excel':
 				createExcel(fil)
-			#elif descarga == 'PDF':
-			#	createPDF()
+			elif descarga == 'PDF':
+				createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
 	redir = '/reportesEstablecimientoNIT/' + nit
@@ -770,8 +779,8 @@ def filtroDocEstablecimiento(nit):
 			fil = jsonExcel(ans)
 			if descarga == 'Excel':
 				createExcel(fil)
-			#elif descarga == 'PDF':
-			#	createPDF()
+			elif descarga == 'PDF':
+				createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
 	redir = '/reportesEstablecimientoNIT/' + nit
@@ -787,8 +796,8 @@ def filtroNomEstablecimiento(nit):
 			fil = jsonExcel(ans)
 			if descarga == 'Excel':
 				createExcel(fil)
-			#elif descarga == 'PDF':
-			#	createPDF()
+			elif descarga == 'PDF':
+				createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
 	redir = '/reportesEstablecimientoNIT/' + nit
@@ -804,8 +813,8 @@ def filtroApeEstablecimiento(nit):
 			fil = jsonExcel(ans)
 			if descarga == 'Excel':
 				createExcel(fil)
-			#elif descarga == 'PDF':
-			#	createPDF()
+			elif descarga == 'PDF':
+				createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
 	redir = '/reportesEstablecimientoNIT/' + nit
@@ -820,8 +829,8 @@ def filtroExamenesSalud(nit):
 			fil = jsonExcelSalud(ans)
 			if descarga == 'Excel':
 				createExcelSalud(fil)
-			#elif descarga == 'PDF':
-			#	createPDF()
+			elif descarga == 'PDF':
+				createPDFSalud(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
 	redir = '/reportesSaludNIT/' + nit
@@ -838,8 +847,8 @@ def filtroFechaSalud(nit):
 			fil = jsonExcelSalud(ans)
 			if descarga == 'Excel':
 				createExcelSalud(fil)
-			#elif descarga == 'PDF':
-			#	createPDF()
+			elif descarga == 'PDF':
+				createPDFSalud(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
 	redir = '/reportesSaludNIT/' + nit
@@ -855,13 +864,13 @@ def filtroEstadoSalud(nit):
 			fil = jsonExcelSalud(ans)
 			if descarga == 'Excel':
 				createExcelSalud(fil)
-			#elif descarga == 'PDF':
-			#	createPDF()
+			elif descarga == 'PDF':
+				createPDFSalud(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
 	redir = '/reportesSaludNIT/' + nit
 	return redirect(redir)
 
 if __name__ == '__main__':
-	app.run(debug = True)
+	app.run(host='0.0.0.0', port=8080, debug = True)
 

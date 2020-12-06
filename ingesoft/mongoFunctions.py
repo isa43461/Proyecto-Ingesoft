@@ -4,6 +4,7 @@ import datetime
 import pandas as pd
 from pandas import ExcelWriter
 import os, os.path
+from fpdf import FPDF
 
 MONGO_URI = 'mongodb://localhost'
 
@@ -463,7 +464,7 @@ def createExcel(jso):
 			"Nombres",
 			"Apellidos"]]
 	filename = 'archivo.xlsx'
-	writer = ExcelWriter(os.path.join('C:/Users/Victor Toro/Desktop/ingesoft/static/excel/', filename))
+	writer = ExcelWriter(os.path.join('/home/ubuntu/ingesoft/static/excel/', filename))
 	df.to_excel(writer, 'Hoja de datos', index=False)
 	writer.save()
 	return
@@ -480,10 +481,108 @@ def createExcelSalud(jso):
 			"Fecha del exámen",
 			"Días de cuarentena"]]
 	filename = 'archivo.xlsx'
-	writer = ExcelWriter(os.path.join('C:/Users/Victor Toro/Desktop/ingesoft/static/excel/', filename))
+	writer = ExcelWriter(os.path.join('/home/ubuntu/ingesoft/static/excel/', filename))
 	df.to_excel(writer, 'Hoja de datos', index=False)
 	writer.save()
 	return
+
+def createPDF(col):
+	pdf = FPDF(orientation = 'L')
+	pdf.add_page()
+	pdf.set_xy(0, 0)
+	pdf.set_font('arial', 'B', 7)
+	pdf.cell(26, 10, 'ID Visita', 1, 0, 'C')
+	pdf.cell(30, 10, 'Establecimiento', 1, 0, 'C')
+	pdf.cell(26, 10, 'Tipo de documento', 1, 0, 'C')
+	pdf.cell(26, 10, 'Nro documento', 1, 0, 'C')
+	pdf.cell(26, 10, 'Uso del tapabocas', 1, 0, 'C')
+	pdf.cell(26, 10, 'Temperatura', 1, 0, 'C')
+	pdf.cell(26, 10, 'Fecha de ingreso', 1, 0, 'C')
+	pdf.cell(26, 10, 'Hora de ingreso', 1, 0, 'C')
+	pdf.cell(26, 10, 'Ingreso', 1, 0, 'C')
+	pdf.cell(28, 10, 'Nombres', 1, 0, 'C')
+	pdf.cell(28, 10, 'Apellidos', 1, 1, 'C')
+	#pdf.cell(-90)
+	acum = 10
+	pdf.set_xy(0, acum)
+
+	for i in range(len(col["ID Visita"])):
+		col1 = col["ID Visita"][i]
+		col2 = col["Establecimiento"][i]
+		col3 = col["Tipo de documento"][i]
+		col4 = col["Nro documento"][i]
+		col5 = col["Uso del tapabocas"][i]
+		col6 = col["Temperatura"][i]
+		col7 = col["Fecha de ingreso"][i]
+		col8 = col["Hora de ingreso"][i]
+		col9 = col["Ingreso"][i]
+		col10 = col["Nombres"][i]
+		col11 = col["Apellidos"][i]
+
+		pdf.cell(26, 10, '%s' % (col1), 1, 0, 'C')
+		pdf.cell(26, 10, '%s' % (col2), 1, 0, 'C')
+		pdf.cell(26, 10, '%s' % (col3), 1, 0, 'C')
+		pdf.cell(26, 10, '%s' % (col4), 1, 0, 'C')
+		pdf.cell(26, 10, '%s' % (col5), 1, 0, 'C')
+		pdf.cell(26, 10, '%s' % (col6), 1, 0, 'C')
+		pdf.cell(26, 10, '%s' % (col7), 1, 0, 'C')
+		pdf.cell(26, 10, '%s' % (col8), 1, 0, 'C')
+		pdf.cell(26, 10, '%s' % (col9), 1, 0, 'C')
+		pdf.cell(28, 10, '%s' % (col10), 1, 0, 'C')
+		pdf.cell(28, 10, '%s' % (col11), 1, 1, 'C')
+		#pdf.cell(-90)
+		acum += 10
+		pdf.set_xy(0, acum)
+	pdf.output('/home/ubuntu/ingesoft/static/pdf/archivo.pdf', 'F')
+	return	
+		
+def createPDFSalud(col):
+	pdf = FPDF(orientation = 'L')
+	pdf.add_page()
+	pdf.set_xy(0, 0)
+	pdf.set_font('arial', 'B', 7)
+	pdf.cell(26, 10, 'ID Exámen', 1, 0, 'C')
+	pdf.cell(80, 10, 'Entidad de salud', 1, 0, 'C')
+	pdf.cell(30, 10, 'Tipo de documento', 1, 0, 'C')
+	pdf.cell(26, 10, 'Nro documento', 1, 0, 'C')
+	pdf.cell(29, 10, 'Nombres', 1, 0, 'C')
+	pdf.cell(29, 10, 'Apellidos', 1, 0, 'C')
+	pdf.cell(26, 10, 'Resultado', 1, 0, 'C')
+	pdf.cell(26, 10, 'Fecha del exámen', 1, 0, 'C')
+	pdf.cell(26, 10, 'Días de cuarentena', 1, 1, 'C')
+	#pdf.cell(-90)
+	acum = 10
+	pdf.set_xy(0, acum)
+	pdf.set_font('arial', 'B', 7)
+	for i in range(len(col["ID Exámen"])):
+		col1 = col["ID Exámen"][i]
+		col2 = col["Entidad de salud"][i]
+		col3 = col["Tipo de documento"][i]
+		col4 = col["Nro documento"][i]
+		col5 = col["Nombres"][i]
+		col6 = col["Apellidos"][i]
+		col7 = col["Resultado"][i]
+		col8 = col["Fecha del exámen"][i]
+		col9 = col["Días de cuarentena"][i]
+
+		pdf.cell(26, 10, '%s' % (col1), 1, 0, 'C')
+		pdf.set_font('arial', 'B', 6)
+		pdf.cell(80, 10, '%s' % (col2), 1, 0, 'C')
+		pdf.set_font('arial', 'B', 7)
+		pdf.cell(30, 10, '%s' % (col3), 1, 0, 'C')
+		pdf.cell(26, 10, '%s' % (col4), 1, 0, 'C')
+		pdf.cell(29, 10, '%s' % (col5), 1, 0, 'C')
+		pdf.cell(29, 10, '%s' % (col6), 1, 0, 'C')
+		pdf.cell(26, 10, '%s' % (col7), 1, 0, 'C')
+		pdf.cell(26, 10, '%s' % (col8), 1, 0, 'C')
+		pdf.cell(26, 10, '%s' % (col9), 1, 1, 'C')
+		#pdf.cell(-90)
+		acum += 10
+		pdf.set_xy(0, acum)
+	pdf.output('/archivo.pdf', 'F')
+	return
+
+
 
 """
 def createPDF():
@@ -519,11 +618,15 @@ fini = '2020-12-05'
 ffin = '2020-12-05'
 hini = '02:38am'
 hfin = '02:41am'
-nit = "8909203040"
-ans = reporteFechaHoraEstablecimiento(nit, fini, ffin, hini, hfin)
-fil = jsonExcel(ans)
+
+ini = '2020-12-05'
+fin = '2020-12-05'
+nit = "8600788287"
+ans = reporteExamenesSaludJson(nit)
+fil = jsonExcelSalud(ans)
+createPDFSalud(fil)
 createExcel(fil)
-createPDF()
+
 
 
 
