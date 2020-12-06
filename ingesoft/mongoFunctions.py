@@ -463,7 +463,8 @@ def createExcel(jso):
 			"Ingreso",
 			"Nombres",
 			"Apellidos"]]
-	filename = '/archivo.xlsx'
+	filename = '/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/excel/archivo.xlsx'
+	#filename = 'C:/Users/Victor Toro/Documents/Proyecto Ingesoft AWS/ingesoft/static/excel/archivo.xlsx'
 	writer = ExcelWriter(filename)
 	df.to_excel(writer, 'Hoja de datos', index=False)
 	writer.save()
@@ -480,7 +481,8 @@ def createExcelSalud(jso):
 			"Resultado",
 			"Fecha del exámen",
 			"Días de cuarentena"]]
-	filename = '/archivo.xlsx'
+	filename = '/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/excel/archivo.xlsx'
+	#filename = 'C:/Users/Victor Toro/Documents/Proyecto Ingesoft AWS/ingesoft/static/excel/archivo.xlsx'
 	writer = ExcelWriter(filename)
 	df.to_excel(writer, 'Hoja de datos', index=False)
 	writer.save()
@@ -492,8 +494,8 @@ def createPDF(col):
 	pdf.set_xy(0, 0)
 	pdf.set_font('arial', 'B', 7)
 	pdf.cell(26, 10, 'ID Visita', 1, 0, 'C')
-	pdf.cell(30, 10, 'Establecimiento', 1, 0, 'C')
-	pdf.cell(26, 10, 'Tipo de documento', 1, 0, 'C')
+	pdf.cell(32, 10, 'Establecimiento', 1, 0, 'C')
+	pdf.cell(28, 10, 'Tipo de documento', 1, 0, 'C')
 	pdf.cell(26, 10, 'Nro documento', 1, 0, 'C')
 	pdf.cell(26, 10, 'Uso del tapabocas', 1, 0, 'C')
 	pdf.cell(26, 10, 'Temperatura', 1, 0, 'C')
@@ -520,8 +522,8 @@ def createPDF(col):
 		col11 = col["Apellidos"][i]
 
 		pdf.cell(26, 10, '%s' % (col1), 1, 0, 'C')
-		pdf.cell(26, 10, '%s' % (col2), 1, 0, 'C')
-		pdf.cell(26, 10, '%s' % (col3), 1, 0, 'C')
+		pdf.cell(32, 10, '%s' % (col2), 1, 0, 'C')
+		pdf.cell(28, 10, '%s' % (col3), 1, 0, 'C')
 		pdf.cell(26, 10, '%s' % (col4), 1, 0, 'C')
 		pdf.cell(26, 10, '%s' % (col5), 1, 0, 'C')
 		pdf.cell(26, 10, '%s' % (col6), 1, 0, 'C')
@@ -533,8 +535,9 @@ def createPDF(col):
 		#pdf.cell(-90)
 		acum += 10
 		pdf.set_xy(0, acum)
-	pdf.output('/archivo.pdf', 'F')
-	return	
+	pdf.output('/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/pdf/archivo.pdf', 'F')
+	#pdf.output('C:/Users/Victor Toro/Documents/Proyecto Ingesoft AWS/ingesoft/static/pdf/archivo.pdf', 'F')
+	return 
 		
 def createPDFSalud(col):
 	pdf = FPDF(orientation = 'L')
@@ -579,8 +582,9 @@ def createPDFSalud(col):
 		#pdf.cell(-90)
 		acum += 10
 		pdf.set_xy(0, acum)
-	pdf.output('/archivo.pdf', 'F')
-	return
+	pdf.output('/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/pdf/archivo.pdf', 'F')
+	#pdf.output('C:/Users/Victor Toro/Documents/Proyecto Ingesoft AWS/ingesoft/static/pdf/archivo.pdf', 'F')
+	return 
 
 
 

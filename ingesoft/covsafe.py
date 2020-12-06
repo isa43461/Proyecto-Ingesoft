@@ -9,24 +9,35 @@ from pandas import ExcelWriter
 import numpy as np
 import cv2
 from PIL import Image
-from flask import Flask, redirect, url_for, render_template, request, flash
+from flask import Flask, redirect, url_for, render_template, request, flash, send_file, send_from_directory
 from werkzeug.utils import secure_filename
 from pymongo import MongoClient
 from mongoFunctions import *
 
-UPLOAD_FOLDER = "/home/ubuntu/software/ingesoft/static/leerCodigosQR/"
-UPLOAD_FOLDER2 = "/home/ubuntu/software/ingesoft/static/archivosRUT/"
-UPLOAD_FOLDER3 = "/home/ubuntu/software/ingesoft/static/excel/"
+
+UPLOAD_FOLDER = "/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/leerCodigosQR/"
+UPLOAD_FOLDER2 = "/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/archivosRUT/"
+UPLOAD_FOLDER3 = "/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/excel/"
 #@login_required
-app = Flask(__name__, template_folder="templates")
+app = Flask(__name__, static_folder='static', template_folder="templates")
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['UPLOAD_FOLDER2'] = UPLOAD_FOLDER2
 app.config['UPLOAD_FOLDER3'] = UPLOAD_FOLDER3
+#app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.secret_key = 'secreto'
 
 @app.route('/')
 def inicio():
 	return render_template('inicio.html')
+
+
+@app.after_request
+def add_header(response):
+	# response.cache_control.no_store = True
+	if 'Cache-Control' not in response.headers:
+		response.headers['Cache-Control'] = 'no-store'
+	return response
+
 
 @app.route('/iniciarS')
 def iniciarS():
@@ -476,7 +487,7 @@ def modInfoSalud(Id):
 
 @app.route('/img/<img_id>')
 def serve_img(img_id):
-	return redirect(url_for('/home/ubuntu/software/ingesoft/codigosQR/', download=img_id), code=301)
+	return redirect(url_for('/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/codigosQR/', download=img_id), code=301)
 
 @app.route('/genCodigoQR/<Id>')
 def genCodigoQR(Id):
@@ -498,7 +509,7 @@ def genCodigoQR(Id):
 	qr.add_data(info)
 	qr.make(fit=True)
 	imagen = qr.make_image()
-	dir_path = "/home/ubuntu/software/ingesoft/static/codigosQR/" + str(Id) + ".png"
+	dir_path = "/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/codigosQR/" + str(Id) + ".png"
 	imagen.save(dir_path, 'PNG')
 	return render_template('/codigoQR.html', data = data)
 
@@ -523,7 +534,7 @@ def ingresoDestiempo(nit):
 			ingresar = False
 	else:
 		ingresar = False
-	
+
 	if ingresar:
 		nro = Visita.count_documents({})
 		nro += 1
@@ -597,7 +608,7 @@ def seleccionarFiltroSalud(nit):
 @app.route('/leerCodigoQR/<nit>', methods=['POST'])
 def leerCodigo(nit):
 	#dir_path = sys.path[0]
-	dir_path = "/home/ubuntu/software/ingesoft"
+	dir_path = "/home/ubuntu/Proyecto-Ingesoft/software/ingesoft"
 	if request.method == 'POST':
 		temperatura = float(request.form.get("inputTemp"))
 		tapabocas = request.form.get("inputMuni")
@@ -646,36 +657,35 @@ def leerCodigo(nit):
 @app.route('/filtroVisitasCiudadano/<Id>', methods=['POST'])
 def filtroVisitasCiudadano(Id):
 	if request.method == 'POST':
-		descarga = request.form.get("tipo")
+		#descarga = request.form.get("tipo")
 		ans = reporteVisitasCiudadanoJson(Id)
 		if len(ans) != 0:
 			fil = jsonExcel(ans)
-			if descarga == 'Excel':
-				createExcel(fil)
-			elif descarga == 'PDF':
-				createPDF(fil)
+			createExcel(fil)
+			createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
-	redir = '/reportesCiudadanoID/' + Id
-	return redirect(redir)
+	ciud = Ciudadano.find_one({"_id":Id})
+	data = [ciud["Usuario"], ciud["_id"]]
+	data = [data]
+	return render_template("reporteVisitasCiudadano.html", data = data)
 
 @app.route('/filtroVisFechaCiudadano/<Id>', methods=['POST'])
 def filtroVisFechaCiudadano(Id):
 	if request.method == 'POST':
 		ini = request.form.get("inicio")
 		fin = request.form.get("fin")
-		descarga = request.form.get("tipo")
 		ans = reporteVisFechaCiudadanoJson(Id, ini, fin)
 		if len(ans) != 0:
 			fil = jsonExcel(ans)
-			if descarga == 'Excel':
-				createExcel(fil)
-			elif descarga == 'PDF':
-				createPDF(fil)
+			createExcel(fil)
+			createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
-	redir = '/reportesCiudadanoID/' + Id
-	return redirect(redir)
+	ciud = Ciudadano.find_one({"_id":Id})
+	data = [ciud["Usuario"], ciud["_id"]]
+	data = [data]
+	return render_template("reporteVisFechaCiudadano.html", data = data)
 
 @app.route('/filtroVisFechaHoraCiudadano/<Id>', methods=['POST'])
 def filtroVisFechaHoraCiudadano(Id):
@@ -684,70 +694,49 @@ def filtroVisFechaHoraCiudadano(Id):
 		#ffin = request.form.get("fin")
 		hini = request.form.get("hinicio")
 		hfin = request.form.get("hfin")
-		descarga = request.form.get("tipo")
 		ans = reporteFechaHoraCiudadanoJson(Id, fini, fini, hini, hfin)
 		if len(ans) != 0:
 			fil = jsonExcel(ans)
-			if descarga == 'Excel':
-				createExcel(fil)
-			elif descarga == 'PDF':
-				createPDF(fil)
+			createExcel(fil)
+			createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
-	redir = '/reportesCiudadanoID/' + Id
-	return redirect(redir)
-
-"""
-@app.route('/filtroExamenesCiudadano/<Id>', methods=['POST'])
-def filtroExamenesCiudadano(Id):
-	if request.method == 'POST':
-		descarga = request.form.get("tipo")
-		ans = reporteExamenesCiudadanoJson(Id)
-		if len(ans) != 0:
-			fil = jsonExcelSalud(ans)
-			if descarga == 'Excel':
-				createExcelSalud(fil)
-			#elif descarga == 'PDF':
-			#	createPDF()
-		else:
-			flash("*No se encontraron coincidencias con el filtro")
-	redir = '/reportesCiudadanoID/' + Id
-	return redirect(redir)
-"""
+	ciud = Ciudadano.find_one({"_id":Id})
+	data = [ciud["Usuario"], ciud["_id"]]
+	data = [data]
+	return render_template("reporteVisFechaHoraCiudadano.html", data = data)
 
 @app.route('/filtroVisitasEstablecimiento/<nit>', methods=['POST'])
 def filtroVisitasEstablecimiento(nit):
 	if request.method == 'POST':
-		descarga = request.form.get("tipo")
 		ans = reporteVisitasEstablecimientoJson(nit)
 		if len(ans) != 0:
 			fil = jsonExcel(ans)
-			if descarga == 'Excel':
-				createExcel(fil)
-			elif descarga == 'PDF':
-				createPDF(fil)
+			createExcel(fil)
+			createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
-	redir = '/reportesEstablecimientoNIT/' + nit
-	return redirect(redir)
+	est = Establecimiento.find_one({"_id":nit})
+	data = [est["Usuario"], est["_id"]]
+	data = [data]
+	return render_template("reporteVisitasEstablecimiento.html", data = data)
 
 @app.route('/filtroFechaEstablecimiento/<nit>', methods=['POST'])
 def filtroFechaEstablecimiento(nit):
 	if request.method == 'POST':
 		ini = request.form.get("inicio")
 		fin = request.form.get("fin")
-		descarga = request.form.get("tipo")
 		ans = reporteFechaEstablecimientoJson(nit, ini, fin)
 		if len(ans) != 0:
 			fil = jsonExcel(ans)
-			if descarga == 'Excel':
-				createExcel(fil)
-			elif descarga == 'PDF':
-				createPDF(fil)
+			createExcel(fil)
+			createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
-	redir = '/reportesEstablecimientoNIT/' + nit
-	return redirect(redir)
+	est = Establecimiento.find_one({"_id":nit})
+	data = [est["Usuario"], est["_id"]]
+	data = [data]
+	return render_template("reporteFechaEstablecimiento.html", data = data)
 
 @app.route('/filtroFechaHoraEstablecimiento/<nit>', methods=['POST'])
 def filtroFechaHoraEstablecimiento(nit):
@@ -756,121 +745,131 @@ def filtroFechaHoraEstablecimiento(nit):
 		#ffin = request.form.get("fin")
 		hini = request.form.get("hinicio")
 		hfin = request.form.get("hfin")
-		descarga = request.form.get("tipo")
+		#descarga = request.form.get("tipo")
 		ans = reporteFechaHoraEstablecimientoJson(nit, fini, fini, hini, hfin)
 		if len(ans) != 0:
 			fil = jsonExcel(ans)
-			if descarga == 'Excel':
-				createExcel(fil)
-			elif descarga == 'PDF':
-				createPDF(fil)
+			createExcel(fil)
+			createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
-	redir = '/reportesEstablecimientoNIT/' + nit
-	return redirect(redir)
+	est = Establecimiento.find_one({"_id":nit})
+	data = [est["Usuario"], est["_id"]]
+	data = [data]
+	return render_template("reporteFechaHoraEstablecimiento.html", data = data)
 
 @app.route('/filtroDocEstablecimiento/<nit>', methods=['POST'])
 def filtroDocEstablecimiento(nit):
 	if request.method == 'POST':
 		doc = request.form.get("doc")
-		descarga = request.form.get("tipo")
+		#descarga = request.form.get("tipo")
 		ans = reporteDocumentoEstablecimientoJson(nit, doc)
 		if len(ans) != 0:
 			fil = jsonExcel(ans)
-			if descarga == 'Excel':
-				createExcel(fil)
-			elif descarga == 'PDF':
-				createPDF(fil)
+			createExcel(fil)
+			createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
-	redir = '/reportesEstablecimientoNIT/' + nit
-	return redirect(redir)
+	est = Establecimiento.find_one({"_id":nit})
+	data = [est["Usuario"], est["_id"]]
+	data = [data]
+	return render_template("reporteDocumentoEstablecimiento.html", data = data)
 
 @app.route('/filtroNomEstablecimiento/<nit>', methods=['POST'])
 def filtroNomEstablecimiento(nit):
 	if request.method == 'POST':
 		nom = request.form.get("nombres")
-		descarga = request.form.get("tipo")
+		#descarga = request.form.get("tipo")
 		ans = reporteNombreEstablecimientoJson(nit, nom)
 		if len(ans) != 0:
 			fil = jsonExcel(ans)
-			if descarga == 'Excel':
-				createExcel(fil)
-			elif descarga == 'PDF':
-				createPDF(fil)
+			createExcel(fil)
+			createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
-	redir = '/reportesEstablecimientoNIT/' + nit
-	return redirect(redir)
+	est = Establecimiento.find_one({"_id":nit})
+	data = [est["Usuario"], est["_id"]]
+	data = [data]
+	return render_template("reporteNombresEstablecimiento.html", data = data)
 
 @app.route('/filtroApeEstablecimiento/<nit>', methods=['POST'])
 def filtroApeEstablecimiento(nit):
 	if request.method == 'POST':
 		ape = request.form.get("apellido")
-		descarga = request.form.get("tipo")
+		#descarga = request.form.get("tipo")
 		ans = reporteApellidoEstablecimientoJson(nit, ape)
 		if len(ans) != 0:
 			fil = jsonExcel(ans)
-			if descarga == 'Excel':
-				createExcel(fil)
-			elif descarga == 'PDF':
-				createPDF(fil)
+			createExcel(fil)
+			createPDF(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
-	redir = '/reportesEstablecimientoNIT/' + nit
-	return redirect(redir)
+	est = Establecimiento.find_one({"_id":nit})
+	data = [est["Usuario"], est["_id"]]
+	data = [data]
+	return render_template("reporteApellidoEstablecimiento.html", data = data)
 
 @app.route('/filtroExamenesSalud/<nit>', methods=['POST'])
 def filtroExamenesSalud(nit):
 	if request.method == 'POST':
-		descarga = request.form.get("tipo")
+		#descarga = request.form.get("tipo")
 		ans = reporteExamenesSaludJson(nit)
 		if len(ans) != 0:
 			fil = jsonExcelSalud(ans)
-			if descarga == 'Excel':
-				createExcelSalud(fil)
-			elif descarga == 'PDF':
-				createPDFSalud(fil)
+			createExcelSalud(fil)
+			createPDFSalud(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
-	redir = '/reportesSaludNIT/' + nit
-	return redirect(redir)
+	sal = Salud.find_one({"_id":nit})
+	data = [sal["Usuario"], sal["_id"]]
+	data = [data]
+	return render_template('reporteExamenesSalud.html', data = data)
 
 @app.route('/filtroFechaSalud/<nit>', methods=['POST'])
 def filtroFechaSalud(nit):
 	if request.method == 'POST':
 		ini = request.form.get("inicio")
 		fin = request.form.get("fin")
-		descarga = request.form.get("tipo")
+		#descarga = request.form.get("tipo")
 		ans = reporteFechaSaludJson(nit, ini, fin)
 		if len(ans) != 0:
 			fil = jsonExcelSalud(ans)
-			if descarga == 'Excel':
-				createExcelSalud(fil)
-			elif descarga == 'PDF':
-				createPDFSalud(fil)
+			createExcelSalud(fil)
+			createPDFSalud(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
-	redir = '/reportesSaludNIT/' + nit
-	return redirect(redir)
+	sal = Salud.find_one({"_id":nit})
+	data = [sal["Usuario"], sal["_id"]]
+	data = [data]
+	return render_template('reporteFechaSalud.html', data = data)
 
 @app.route('/filtroEstadoSalud/<nit>', methods=['POST'])
 def filtroEstadoSalud(nit):
 	if request.method == 'POST':
 		res = request.form.get("resul")
-		descarga = request.form.get("tipo")
+		#descarga = request.form.get("tipo")
 		ans = reporteEstadoSaludJson(nit, res)
 		if len(ans) != 0:
 			fil = jsonExcelSalud(ans)
-			if descarga == 'Excel':
-				createExcelSalud(fil)
-			elif descarga == 'PDF':
-				createPDFSalud(fil)
+			createExcelSalud(fil)
+			createPDFSalud(fil)
 		else:
 			flash("*No se encontraron coincidencias con el filtro")
-	redir = '/reportesSaludNIT/' + nit
-	return redirect(redir)
+	sal = Salud.find_one({"_id":nit})
+	data = [sal["Usuario"], sal["_id"]]
+	data = [data]
+	return render_template('reporteEstadoSalud.html', data = data)
+
+@app.route('/download/<path:nom>')
+def download_file(nom):
+	filename = "/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/" + nom
+	#filename = "C:/Users/Victor Toro/Documents/Proyecto Ingesoft AWS/ingesoft/static/" + nom
+	return send_file(filename, as_attachment=True)
+	#if 'Cache-Control' not in response.headers:
+	#	response.headers['Cache-Control'] = 'no-store'
+	#return response
+	#return send_file(filename, as_attachment=True, cache_timeout=0)
 
 if __name__ == '__main__':
-	app.run(host='0.0.0.0', port=8080, debug = True)
-
+	app.run(debug = True)
+	#app.run(host='0.0.0.0', port=8080, debug = True)

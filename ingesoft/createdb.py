@@ -20,7 +20,7 @@ Examen = db['Examen']
 Visita = db['Visita']
 Solicitud = db['Solicitud']
 
-Admin.inser_one({"_id":"1143878531","Nombre":"Victor Manuel","Apellido":"Toro Cedeño","Tipo_documento":"Cédula de ciudadanía","Usuario":"admin","Contraseña":"admin"})
+Admin.insert_one({"_id":"1143878531","Nombre":"Victor Manuel","Apellido":"Toro Cedeño","Tipo_documento":"Cédula de ciudadanía","Usuario":"admin","Contraseña":"admin"})
 Categoria.insert_one({"_id":1, "Nombre": 'Entidad de salud'})
 Categoria.insert_one({"_id":2, "Nombre": 'Almacén'})
 Categoria.insert_one({"_id":3, "Nombre": 'Droguería'})
