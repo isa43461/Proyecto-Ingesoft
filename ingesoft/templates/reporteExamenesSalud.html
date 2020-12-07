@@ -22,7 +22,7 @@
 	   <div class="btn-group dropleft">
 	   <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{data[0][0]}}</button><span class="sr-only">Toggle Dropdown</span>
 	          <div class="dropdown-menu" aria-labelledby="dropdownMenuReference">
-	            <a class="dropdown-item" href="/modInfoSalud/{{data[0][1]}}"><img src="{{ url_for('static', filename='neg.PNG')}}" width="20%" height="20%" alt=""> Perfil </a>
+	            <a class="dropdown-item" href="/modInfoSalud/{{data[0][1]}}"><img src="{{ url_for('static', filename='salud.PNG')}}" width="20%" height="20%" alt=""> Perfil </a>
 	            <a class="dropdown-item" href="/reportesSaludNIT/{{data[0][1]}}">Reportes</a>
 	            <a class="dropdown-item" href="/registroCiudadano">Ingreso manual de cliente</a>
 	            <a class="dropdown-item" href="/registroExamenNIT/{{data[0][1]}}">Eliminar cuenta</a>
@@ -65,7 +65,14 @@
 							   		<a class="btn btn-info" href="/download/pdf/archivo.pdf">Descargar PDF</a>
 							   	</div>
 							    </div>
-							</div>	
+							</div>
+							{% with messages = get_flashed_messages() %}
+					 		{% if messages %}
+					 		{% for m in messages %}
+					 			<b><p>{{m}}</p></b>
+					 		{% endfor %}
+					 		{% endif %}
+					 		{% endwith %}	
 			        	</div>
 		    		</div>
 		    </div>

@@ -389,6 +389,84 @@ def reporteEstadoSaludJson(nit, res):
 			fil.append(r)
 	return fil
 
+def reporteGeneroAdminJson(gen):
+	results = Ciudadano.find({"Género":gen})
+	fil = []
+	for r in results:
+		ced = r["_id"]
+		vis = Visita.find({})
+		for v in vis:	
+			if v["ID_Visitante"] == ced:
+				fil.append(v)
+	return fil
+
+def reporteCategoriaAdminJson(cat):
+	c = Categoria.find_one({"Nombre":cat})
+	results = Establecimiento.find({"Categoría":[c["_id"], c["Nombre"]]})
+	fil = []
+	for r in results:
+		nit = r["_id"]
+		vis = Visita.find({})
+		for v in vis:
+			if v["NIT_Establecimiento"] == nit:
+				fil.append(v)
+	return fil
+
+def reporteEstablecimientoAdminJson(nom):
+	results = Establecimiento.find({"Razón_social":nom})
+	fil = []
+	for r in results:
+		nit = r["_id"]
+		vis = Visita.find({})
+		for v in vis:
+			if v["NIT_Establecimiento"] == nit:
+				fil.append(v)
+	return fil
+
+def reporteExamenesAdminJson():
+	results = Examen.find({})
+	fil = []
+	for r in results:
+		fil.append(r)
+	return fil
+"""
+def reporteAforoAdminJson(num):
+	results = Establecimiento.find({})
+	fil = []
+	for r in results:
+		nit = r["_id"]
+		vis = Visita.find({})
+		for v in vis:
+			if v["NIT_Establecimiento"] == nit:
+				fil.append(v)
+"""
+def reporteDocumentoAdminJson(tipodoc, doc):
+	results = Ciudadano.find_one({"_id":doc, "Tipo_documento":tipodoc})
+	fil = []
+	for r in results:
+		ced = r["_id"]
+		vis = Visita.find({})
+		for v in vis:	
+			if v["ID_Visitante"] == ced:
+				fil.append(v)
+	return fil
+
+def reporteFechaHoraAdminJson(fini, ffin, hini, hfin):
+	ini = fini + ' ' + hini
+	fin = ffin + ' ' + hfin
+	ini = datetime.datetime.strptime(ini , '%Y-%m-%d %H:%M')
+	fin = datetime.datetime.strptime(fin , '%Y-%m-%d %H:%M')
+	results = Visita.find({})
+	fil = []
+	for r in results:
+		fecha = r["Fecha"]
+		hora = r["Hora"]
+		val = fecha + ' ' + hora
+		tmp = datetime.datetime.strptime(val, '%Y-%m-%d %H:%M:%S.%f')
+		if tmp >= ini and tmp <= fin:
+			fil.append(r)
+	return fil
+
 def jsonExcel(fil):
 	col = { "ID Visita":[], 
 			"Establecimiento":[],
@@ -463,7 +541,7 @@ def createExcel(jso):
 			"Ingreso",
 			"Nombres",
 			"Apellidos"]]
-	filename = '/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/excel/archivo.xlsx'
+	filename = '/home/ubuntu/reportedos/Proyecto-Ingesoft/ingesoft/static/excel/archivo.xlsx'
 	#filename = 'C:/Users/Victor Toro/Documents/Proyecto Ingesoft AWS/ingesoft/static/excel/archivo.xlsx'
 	writer = ExcelWriter(filename)
 	df.to_excel(writer, 'Hoja de datos', index=False)
@@ -481,7 +559,7 @@ def createExcelSalud(jso):
 			"Resultado",
 			"Fecha del exámen",
 			"Días de cuarentena"]]
-	filename = '/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/excel/archivo.xlsx'
+	filename = '/home/ubuntu/reportedos/Proyecto-Ingesoft/ingesoft/static/excel/archivo.xlsx'
 	#filename = 'C:/Users/Victor Toro/Documents/Proyecto Ingesoft AWS/ingesoft/static/excel/archivo.xlsx'
 	writer = ExcelWriter(filename)
 	df.to_excel(writer, 'Hoja de datos', index=False)
@@ -535,7 +613,7 @@ def createPDF(col):
 		#pdf.cell(-90)
 		acum += 10
 		pdf.set_xy(0, acum)
-	pdf.output('/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/pdf/archivo.pdf', 'F')
+	pdf.output('/home/ubuntu/reportedos/Proyecto-Ingesoft/ingesoft/static/pdf/archivo.pdf', 'F')
 	#pdf.output('C:/Users/Victor Toro/Documents/Proyecto Ingesoft AWS/ingesoft/static/pdf/archivo.pdf', 'F')
 	return 
 		
@@ -582,7 +660,7 @@ def createPDFSalud(col):
 		#pdf.cell(-90)
 		acum += 10
 		pdf.set_xy(0, acum)
-	pdf.output('/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/pdf/archivo.pdf', 'F')
+	pdf.output('/home/ubuntu/reportedos/Proyecto-Ingesoft/ingesoft/static/pdf/archivo.pdf', 'F')
 	#pdf.output('C:/Users/Victor Toro/Documents/Proyecto Ingesoft AWS/ingesoft/static/pdf/archivo.pdf', 'F')
 	return 
 

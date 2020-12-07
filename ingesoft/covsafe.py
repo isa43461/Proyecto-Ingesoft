@@ -14,12 +14,14 @@ from werkzeug.utils import secure_filename
 from pymongo import MongoClient
 from mongoFunctions import *
 
+#C:/Users/Victor Toro/Documents/Proyecto Ingesoft AWS/ingesoft/static/archivosRUT/
 
-UPLOAD_FOLDER = "/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/leerCodigosQR/"
-UPLOAD_FOLDER2 = "/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/archivosRUT/"
-UPLOAD_FOLDER3 = "/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/excel/"
+UPLOAD_FOLDER = "/home/ubuntu/reportedos/Proyecto-Ingesoft/ingesoft/static/leerCodigosQR/"
+UPLOAD_FOLDER2 = "/home/ubuntu/reportedos/Proyecto-Ingesoft/ingesoft/static/archivosRUT/"
+UPLOAD_FOLDER3 = "/home/ubuntu/reportedos/Proyecto-Ingesoft/ingesoft/static/excel/"
 #@login_required
-app = Flask(__name__, static_folder='static', template_folder="templates")
+
+app = Flask(__name__, static_folder="static", template_folder="templates")
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['UPLOAD_FOLDER2'] = UPLOAD_FOLDER2
 app.config['UPLOAD_FOLDER3'] = UPLOAD_FOLDER3
@@ -54,6 +56,118 @@ def registroCiudadano():
 @app.route('/registroEstablecimiento')
 def registroEstablecimiento():
 	return render_template('registroEstablecimiento.html')
+
+@app.route('/categorias')
+def categorias(data):
+	return render_template('categorias.html', data)
+
+@app.route('/categoriasID/<Id>')
+def categoriasID(Id):
+	data = [[],[]]
+	adm = Admin.find_one({"_id":Id})
+	data[0].append(adm["Usuario"])
+	data[0].append(adm["_id"])
+	cat = Categoria.find({})
+	for c in cat:
+		data[1].append([c["_id"], c["Nombre"]])
+	return render_template('categorias.html', data = data)
+
+@app.route('/aceptarCierre/<nit>/<Id>')
+def aceptarCierre(nit, Id):
+	#sol = Solicitud.find_one({"_id":nit})
+	Solicitud.delete_one({"_id":nit})
+	Establecimiento.update_one({"_id":nit}, {"$set": {"Usuario":"","Contraseña":""}})
+	flash("Establecimiento cerrado satisfactoriamente")
+	return redirect('/aprobacionCierreID/' + Id)
+
+@app.route('/denegarCierre/<nit>/<Id>')
+def denegarCierre(nit, Id):
+	#sol = Solicitud.find_one({"_id":nit})
+	Solicitud.delete_one({"_id":nit})
+	#Establecimiento.update_one({"_id":nit, "Usuario":"", "Contraseña":""})
+	flash("Solicitud de cierre de establecimiento denegada")
+	return redirect('/aprobacionCierreID/' + Id)
+
+@app.route('/aceptar/<nit>/<Id>')
+def aceptar(nit, Id):
+	est = Solicitud.find_one({"_id":nit})
+	if est["Categoría"][0] == 1:
+		neg = jsonToList2(est)
+		insertSalud(neg)
+		flash("Entidad de salud registrada satisfactoriamente")
+	else:
+		neg = jsonToList2(est)
+		insertEstablecimiento(neg)
+		flash("Establecimiento registrada satisfactoriamente")
+	Solicitud.delete_one({"_id":nit})
+	return redirect('/aprobacionAperturaID/' + Id)
+
+@app.route('/denegar/<nit>/<Id>')
+def denegar(nit, Id):
+	est = Solicitud.find_one({"_id":nit})
+	if est["Categoría"][0] == 1:
+		flash("Entidad de salud rechazada satisfactoriamente")
+	else:
+		flash("Establecimiento rechazado satisfactoriamente")
+	Solicitud.delete_one({"_id":nit})
+	return redirect('/aprobacionAperturaID/' + Id)
+
+@app.route('/aprobacionApertura')
+def aprobacionApertura(data):
+	return render_template('aprobacionApertura.html', data)
+
+@app.route('/aprobacionAperturaID/<Id>')
+def aprobacionAperturaID(Id):
+	data = [[],[]]
+	adm = Admin.find_one({"_id":Id})
+	data[0].append(adm["Usuario"])
+	data[0].append(adm["_id"])
+	sol = Solicitud.find({"Solicitud":"Registro"})
+	for s in sol:
+		data[1].append([s["_id"], s["Razón_social"], s["Categoría"], s["Correo"]])
+	print(data)
+	return render_template('aprobacionApertura.html', data = data)
+
+@app.route('/aprobacionCierre')
+def aprobacionCierre(data):
+	return render_template('aprobacionCierre.html', data)
+
+@app.route('/aprobacionCierreID/<Id>')
+def aprobacionCierreID(Id):
+	data = [[],[]]
+	adm = Admin.find_one({"_id":Id})
+	data[0].append(adm["Usuario"])
+	data[0].append(adm["_id"])
+	sol = Solicitud.find({"Solicitud":"Eliminar"})
+	for s in sol:
+		data[1].append([s["_id"], s["Razón_social"], s["Categoría"], s["Correo"]])
+	print(data)
+	return render_template('aprobacionCierre.html', data = data)
+
+@app.route('/aprobacionSolicitudes')
+def aprobacionSolicitudes(data):
+	return render_template('aprobacionSolicitudes.html', data)
+
+@app.route('/aprobacionSolicitudesID/<Id>')
+def aprobacionSolicitudesID(Id):
+	data = [[]]
+	adm = Admin.find_one({"_id":Id})
+	data[0].append(adm["Usuario"])
+	data[0].append(adm["_id"])
+	return render_template('aprobacionSolicitudes.html', data = data)
+
+@app.route('/seleccionarSolicitud/<Id>', methods=['POST'])
+def seleccionarSolicitud(Id):
+	if request.method == 'POST':
+		select = request.form.get("tipo")
+		if select == 'Nuevo negocio/entidad': select = 'AperturaID/'
+		elif select == 'Cierre de negocio/entidad': select = 'CierreID/'
+	redir = '/aprobacion' + select + Id
+	adm = Admin.find_one({"_id":Id})
+	data = [[]]
+	data[0].append(adm["Usuario"])
+	data[0].append(adm["_id"])
+	return redirect(redir)
 
 @app.route('/reportesCiudadano')
 def reportesCiudadano(data):
@@ -236,6 +350,48 @@ def infoEstablecimiento(data):
 def infoSalud(data):
 	return render_template('infoSalud.html', data)
 
+@app.route('/reportesAdministrador')
+def reportesAdministrador(data):
+	return render_template('reportesAdministrador.html', data)
+
+@app.route('/reportesAdministradorID/<Id>')
+def reportesAdministradorID(Id):
+	adm = Admin.find_one({"_id":Id})
+	data = [adm["Usuario"], adm["_id"]]
+	data = [data]
+	return render_template('reportesAdministrador.html', data = data)
+
+@app.route('/reporteGeneroAdministrador')
+def reporteGeneroAdministrador(data):
+	return render_template('reporteGeneroAdministrador.html', data)
+
+@app.route('/reporteCategoriaAdministrador')
+def reporteCategoriaAdministrador(data):
+	return render_template('reporteCategoriaAdministrador.html', data)
+
+@app.route('/reporteEstablecimientoAdministrador')
+def reporteEstablecimientoAdministrador(data):
+	return render_template('reporteEstablecimientoAdministrador.html', data)
+
+@app.route('/reporteExamenesAdministrador')
+def reporteExamenesAdministrador(data):
+	return render_template('reporteExamenesAdministrador.html', data)
+
+@app.route('/reporteDocumentoAdministrador')
+def reporteDocumentoAdministrador(data):
+	return render_template('reporteDocumentoAdministrador.html', data)
+
+@app.route('/reporteFechaHoraAdministrador')
+def reporteFechaHoraAdministrador(data):
+	return render_template('reporteFechaHoraAdministrador.html', data)
+"""
+@app.route('/reporteGeneroAdministradorID/<Id>')
+def reporteGeneroAdministradorID(Id):
+	adm = Admin.find_one({"_id":Id})
+	data = [adm["Usuario"], adm["_id"]]
+	data = [data]
+	return render_template('reporteGeneroAdministrador.html', data = data)
+"""
 @app.route('/infoAdministrador')
 def infoAdministrador(data):
 	return render_template('infoAdministrador.html', data)
@@ -478,7 +634,7 @@ def modInfoSalud(Id):
 		cate = Categoria.find_one({"Nombre": categoria})
 		cate = jsonToList2(cate)
 		sal = [razon, correo, contacto, departamento, municipio, barrio, direccion, contra]
-		updateEstablecimiento(Id, sal)
+		updateSalud(Id, sal)
 		flash('*Información modificada')
 	newdata = Salud.find_one({"_id":Id})
 	newdata = orderSalud(newdata)
@@ -487,13 +643,13 @@ def modInfoSalud(Id):
 
 @app.route('/img/<img_id>')
 def serve_img(img_id):
-	return redirect(url_for('/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/codigosQR/', download=img_id), code=301)
+	return redirect(url_for('/home/ubuntu/reportedos/Proyecto-Ingesoft/ingesoft/codigosQR/', download=img_id), code=301)
 
 @app.route('/genCodigoQR/<Id>')
 def genCodigoQR(Id):
 	data = Ciudadano.find_one({"_id":Id})
 	newdata = [data["Usuario"], data["_id"]]
-	value = Id + '.png'
+	value = Id + '.PNG'
 	newdata.append(value)
 	tipodoc = data["Tipo_documento"]
 	data = newdata
@@ -509,7 +665,8 @@ def genCodigoQR(Id):
 	qr.add_data(info)
 	qr.make(fit=True)
 	imagen = qr.make_image()
-	dir_path = "/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/codigosQR/" + str(Id) + ".png"
+	dir_path = "/home/ubuntu/reportedos/Proyecto-Ingesoft/ingesoft/static/codigosQR/" + str(Id) + ".PNG"
+	#dir_path = "C:/Users/Victor Toro/Documents/Proyecto Ingesoft AWS/ingesoft/static/codigosQR/" + str(Id) + ".PNG" 
 	imagen.save(dir_path, 'PNG')
 	return render_template('/codigoQR.html', data = data)
 
@@ -605,10 +762,35 @@ def seleccionarFiltroSalud(nit):
 	redir = '/reporte' + tipo + 'Salud.html'
 	return render_template(redir, data = data)
 
+@app.route('/seleccionarFiltroAdmin/<Id>', methods=['POST'])
+def seleccionarFiltroAdmin(Id):
+	tipo = request.form.get("tipo")
+	print(tipo)
+	adm = Admin.find_one({"_id":Id})
+	data = [adm["Usuario"], adm["_id"]]
+	data = [data]
+	if tipo == 'Género de ciudadano': tipo = 'Genero'
+	elif tipo == 'Categorías de establecimientos': 
+		tipo = 'Categoria'
+		data = [[],[]]
+		adm = Admin.find_one({"_id":Id})
+		data[0].append(adm["Usuario"])
+		data[0].append(adm["_id"])
+		cat = Categoria.find({})
+		for c in cat:
+			data[1].append([c["_id"], c["Nombre"]])
+	elif tipo == 'Establecimientos': tipo = 'Establecimiento'
+	elif tipo == 'Resultados de exámenes': tipo = 'Examenes'
+	elif tipo == 'Aforo de establecimientos': tipo = 'Aforo'
+	elif tipo == 'Número de documento': tipo = 'Documento'
+	elif tipo == 'Fecha y hora': tipo = 'FechaHora'
+	redir = '/reporte' + tipo + 'Administrador.html'
+	return render_template(redir, data = data)
+
 @app.route('/leerCodigoQR/<nit>', methods=['POST'])
 def leerCodigo(nit):
 	#dir_path = sys.path[0]
-	dir_path = "/home/ubuntu/Proyecto-Ingesoft/software/ingesoft"
+	dir_path = "/home/ubuntu/reportedos/Proyecto-Ingesoft/software/ingesoft"
 	if request.method == 'POST':
 		temperatura = float(request.form.get("inputTemp"))
 		tapabocas = request.form.get("inputMuni")
@@ -645,8 +827,11 @@ def leerCodigo(nit):
 				valida = 'Aceptado'
 
 			vis = [nro, tipodoc, doc, nit, tapabocas, temperatura, str(datetime.datetime.now().date()), str(datetime.datetime.now().time()),valida]
-			insertVisita(vis)	
-			flash("*Se ha registrado la visita satisfactoriamente")
+			insertVisita(vis)
+			if valida == 'Aceptado':
+				flash("*Se ha registrado la visita satisfactoriamente")
+			elif valida == 'Denegado':
+				flash("*El usuario no puede ingresar")
 		else:
 			flash("*Ha ocurrido un problema y no se ha registrado la visita")
 	est = Establecimiento.find_one({"_id":nit})
@@ -860,15 +1045,158 @@ def filtroEstadoSalud(nit):
 	data = [data]
 	return render_template('reporteEstadoSalud.html', data = data)
 
+@app.route('/filtroGeneroAdmin/<Id>', methods=['POST'])
+def filtroGeneroAdmin(Id):
+	if request.method == 'POST':
+		gen = request.form.get("tipo")
+		ans = reporteGeneroAdminJson(gen) 
+		if len(ans) != 0:
+			fil = jsonExcel(ans)
+			createExcel(fil)
+			createPDF(fil)
+		else:
+			flash("*No se encontraron coincidencias con el filtro")
+	adm = Admin.find_one({"_id":Id})
+	data = [adm["Usuario"], adm["_id"]]
+	data = [data]
+	return render_template('reporteGeneroAdministrador.html', data = data)
+
+@app.route('/filtroCategoriaAdmin/<Id>', methods=['POST'])
+def filtroCategoriaAdmin(Id):
+	if request.method == 'POST':
+		cat = request.form.get("tipo")
+		c = Categoria.find_one({"Nombre":cat})
+		ans = reporteCategoriaAdminJson(cat) 
+		if len(ans) != 0:
+			fil = jsonExcel(ans)
+			createExcel(fil)
+			createPDF(fil)
+		else:
+			flash("*No se encontraron coincidencias con el filtro")
+	data = [[],[]]
+	adm = Admin.find_one({"_id":Id})
+	data[0].append(adm["Usuario"])
+	data[0].append(adm["_id"])
+	cat = Categoria.find({})
+	for c in cat:
+		data[1].append([c["_id"], c["Nombre"]])
+	
+	return render_template('reporteCategoriaAdministrador.html', data = data)
+
+@app.route('/filtroEstablecimientoAdmin/<Id>', methods=['POST'])
+def filtroEstablecimientoAdmin(Id):
+	if request.method == 'POST':
+		nom = request.form.get("inputName")
+		ans = reporteEstablecimientoAdminJson(nom) 
+		if len(ans) != 0:
+			fil = jsonExcel(ans)
+			createExcel(fil)
+			createPDF(fil)
+		else:
+			flash("*No se encontraron coincidencias con el filtro")
+	adm = Admin.find_one({"_id":Id})
+	data = [adm["Usuario"], adm["_id"]]
+	data = [data]
+	return render_template('reporteEstablecimientoAdministrador.html', data = data)
+
+@app.route('/filtroExamenesAdmin/<Id>', methods=['POST'])
+def filtroExamenesAdmin(Id):
+	if request.method == 'POST':
+		#gen = request.form.get("tipo")
+		ans = reporteExamenesAdminJson() 
+		if len(ans) != 0:
+			fil = jsonExcelSalud(ans)
+			createExcelSalud(fil)
+			createPDFSalud(fil)
+		else:
+			flash("*No se encontraron coincidencias con el filtro")
+	adm = Admin.find_one({"_id":Id})
+	data = [adm["Usuario"], adm["_id"]]
+	data = [data]
+	return render_template('reporteExamenesAdministrador.html', data = data)
+"""
+@app.route('/filtroAforoAdmin/<Id>', methods=['POST'])
+def filtroAforoAdmin(Id):
+	if request.method == 'POST':
+		num = request.form.get("tipo")
+		#ans = reporteGeneroAdminJson(num) 
+		if len(ans) != 0:
+			fil = jsonExcel(ans)
+			createExcel(fil)
+			createPDF(fil)
+		else:
+			flash("*No se encontraron coincidencias con el filtro")
+	adm = Admin.find_one({"_id":Id})
+	data = [adm["Usuario"], adm["_id"]]
+	data = [data]
+	return render_template('reporteAforoAdministrador.html', data = data)
+"""
+@app.route('/filtroDocumentoAdmin/<Id>', methods=['POST'])
+def filtroDocumentoAdmin(Id):
+	if request.method == 'POST':
+		tipodoc = request.form.get("tipo")
+		doc = request.form.get("inputNumDoc")
+		print(tipodoc, doc)
+		ans = reporteDocumentoAdminJson(tipodoc, doc) 
+		if len(ans) != 0:
+			fil = jsonExcel(ans)
+			createExcel(fil)
+			createPDF(fil)
+		else:
+			flash("*No se encontraron coincidencias con el filtro")
+	adm = Admin.find_one({"_id":Id})
+	data = [adm["Usuario"], adm["_id"]]
+	data = [data]
+	return render_template('reporteDocumentoAdministrador.html', data = data)
+
+@app.route('/filtroFechaHoraAdmin/<Id>', methods=['POST'])
+def filtroFechaHoraAdmin(Id):
+	if request.method == 'POST':
+		fini = request.form.get("inicio")
+		#ffin = request.form.get("fin")
+		hini = request.form.get("hinicio")
+		hfin = request.form.get("hfin")
+		#descarga = request.form.get("tipo")
+		ans = reporteFechaHoraAdminJson(fini, fini, hini, hfin)
+		if len(ans) != 0:
+			fil = jsonExcel(ans)
+			createExcel(fil)
+			createPDF(fil)
+		else:
+			flash("*No se encontraron coincidencias con el filtro")
+	adm = Admin.find_one({"_id":Id})
+	data = [adm["Usuario"], adm["_id"]]
+	data = [data]
+	return render_template('reporteFechaHoraAdministrador.html', data = data)
+
 @app.route('/download/<path:nom>')
 def download_file(nom):
-	filename = "/home/ubuntu/software/Proyecto-Ingesoft/ingesoft/static/" + nom
+	filename = "/home/ubuntu/reportedos/Proyecto-Ingesoft/ingesoft/static/" + nom
 	#filename = "C:/Users/Victor Toro/Documents/Proyecto Ingesoft AWS/ingesoft/static/" + nom
 	return send_file(filename, as_attachment=True)
-	#if 'Cache-Control' not in response.headers:
-	#	response.headers['Cache-Control'] = 'no-store'
-	#return response
-	#return send_file(filename, as_attachment=True, cache_timeout=0)
+
+@app.route('/crearCategoria/<Id>', methods=['POST'])
+def crearCategoria(Id):
+	if request.method == 'POST':
+		nombre = request.form.get("inputCat")
+		#print(nombre)
+		ans = Categoria.find_one({"Nombre":nombre})
+		#print(ans == None)
+		if ans == None:
+			nro = Categoria.count_documents({}) + 1
+			dato = [nro, nombre]
+			insertCategoria(dato)
+			flash("Se ha registrado la categoría con éxito")
+		else:
+			flash("La categoría ya está registrada en la base de datos, seleccione otro nombre")
+	data = [[],[]]
+	adm = Admin.find_one({"_id":Id})
+	data[0].append(adm["Usuario"])
+	data[0].append(adm["_id"])
+	cat = Categoria.find({})
+	for c in cat:
+		data[1].append([c["_id"], c["Nombre"]])
+	return render_template("categorias.html", data = data)
 
 if __name__ == '__main__':
 	app.run(debug = True)

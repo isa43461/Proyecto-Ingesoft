@@ -70,7 +70,14 @@
 							   		<a class="btn btn-info" href="/download/pdf/archivo.pdf">Descargar PDF</a>
 							   	</div>
 							    </div>
-							</div>	
+							</div>
+							{% with messages = get_flashed_messages() %}
+					 		{% if messages %}
+					 		{% for m in messages %}
+					 			<b><p>{{m}}</p></b>
+					 		{% endfor %}
+					 		{% endif %}
+					 		{% endwith %}	
 			        	</div>
 		    		</div>
 		    </div>

@@ -59,6 +59,13 @@
 					 				<input class="btn btn-primary" type="submit" value="Descargar">
 					 			</form>
 				 			</div>
+				 			{% with messages = get_flashed_messages() %}
+					 		{% if messages %}
+					 		{% for m in messages %}
+					 			<b><p>{{m}}</p></b>
+					 		{% endfor %}
+					 		{% endif %}
+					 		{% endwith %}
 				 			</form>
 			        	</div>
 		    		</div>
