@@ -770,7 +770,10 @@ print(data)
 #print(n)
 
 
-
-
+#Establecimiento.delete_one({"Razón_social":"67890"})
+#Solicitud.delete_one({"Razón_social":"67890"})
+#res= Ciudadano.find({})
+#for r in res:
+#	print(r)
 
 
