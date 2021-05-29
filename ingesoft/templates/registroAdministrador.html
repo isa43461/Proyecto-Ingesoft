@@ -23,9 +23,9 @@
 	          <div class="dropdown-menu" aria-labelledby="dropdownMenuReference">
 	            <a class="dropdown-item" href="/modInfoAdmin/{{data[0][1]}}"><img src="{{ url_for('static', filename='usr.PNG')}}" width="10%" height="10%" alt=""> Perfil </a>
 	            <a class="dropdown-item" href="#">Registro de nuevo administrador</a>
-	            <a class="dropdown-item" href="autorizacion.html">Aprobaciones</a>
-	            <a class="dropdown-item" href="categorias.html">Categorías</a>
-	            <a class="dropdown-item" href="historial.html">Historial</a>
+	            <a class="dropdown-item" href="/aprobacionSolicitudesID/{{data[0][1]}}">Aprobaciones</a>
+	            <a class="dropdown-item" href="/categoriasID/{{data[0][1]}}">Categorías</a>
+	            <a class="dropdown-item" href="/reportesAdministradorID/{{data[0][1]}}">Historial</a>
 	            <div class="dropdown-divider"></div>
 	            <a class="dropdown-item" href="/">Cerrar Sesión</a>
 	          </div>
