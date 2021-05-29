@@ -810,7 +810,7 @@ def leerCodigo(nit):
 			if flag:
 				nexte += ext[i]
 
-		if nexte == '.png':
+		if nexte == '.PNG' or nexte == '.png':
 			filename = secure_filename(file.filename)
 			file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 			img = cv2.imread(os.path.join(app.config['UPLOAD_FOLDER'], filename))
