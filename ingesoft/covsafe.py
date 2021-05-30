@@ -702,7 +702,10 @@ def ingresoDestiempo(nit):
 
 		vis = [nro, tipodoc, doc, nit, tapabocas, temperatura, fecha, hora, valida]
 		insertVisita(vis)
-		flash("*Se ha registrado la visita satisfactoriamente")
+		if valida == 'Aceptado':
+			flash("*Se ha registrado la visita satisfactoriamente")
+		elif valida == 'Denegado':
+			flash("*El usuario no puede ingresar")
 	else:
 		flash("*Ha ocurrido un problema y no se ha registrado la visita")
 
